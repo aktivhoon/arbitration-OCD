@@ -1,7 +1,7 @@
 # Project
-Neurocomputational model of impaired arbitration between model-based and model-free learning in OCD (Kim, T. et al. 2024, In prep.)
+Neurocomputational model of impaired arbitration between model-based and model-free learning in OCD (Kim, T. et al. 2024, *In prep*.)
 
-> refer to [Lee, S.W. et al. 2014, Neuron](https://doi.org/10.1016/j.neuron.2013.11.028):
+> refer to [Lee, S.W. et al. 2014, *Neuron*](https://doi.org/10.1016/j.neuron.2013.11.028):
 Computations underlying arbitration between MB and MF learning
 
 #### Minor modifications from the original version
