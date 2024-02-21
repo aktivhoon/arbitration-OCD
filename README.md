@@ -7,7 +7,7 @@ Computations underlying arbitration between MB and MF learning
 #### Minor modifications from the original version
 1. debugging the backward update algorithm
 2. reliability -> uncertainty
-3. tunning the boundaries of model parameters
+3. tuning the boundaries of model parameters
 
 
 ---
