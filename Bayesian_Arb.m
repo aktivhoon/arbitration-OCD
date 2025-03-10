@@ -27,7 +27,7 @@ function [myArbitrator myState1 myState2]=Bayesian_Arb(myArbitrator, myState1, m
     % (0) backup old values
     myArbitrator.m1_mean_old=myArbitrator.m1_mean;  myArbitrator.m1_var_old=myArbitrator.m1_var;    myArbitrator.m1_inv_Fano_old=myArbitrator.m1_inv_Fano;
     % (1) find the corresponding row
-    [tmp ind_neg]=find((myArbitrator.m1_thr_PE-myState1.SPE_history(myArbitrator.index))<0); % [!!] must be fwd because it looks into SPE.    
+    [tmp ind_neg]=find((myArbitrator.m1_thr_PE-myState1.SPE_history(myArbitrator.index+1))<0); % [!!] index + 1, if not, SPE is 0 for every first step
     ind_update=length(ind_neg)+1; % 1:neg, 2:zero, 3:posPE
     % (2) update the current column(=1) in PE_history
     myArbitrator.m1_PE_history(:,2:end)=myArbitrator.m1_PE_history(:,1:end-1); % shift 1 column (toward past)
@@ -38,8 +38,8 @@ function [myArbitrator myState1 myState2]=Bayesian_Arb(myArbitrator, myState1, m
     sumK=sum(myArbitrator.m1_PE_num);
     sumK_excl=sumK-myArbitrator.m1_PE_num;
     myArbitrator.m1_mean=(1+myArbitrator.m1_PE_num)/(myArbitrator.K+sumK);
-    myArbitrator.m1_var=((1+myArbitrator.m1_PE_num)/((myArbitrator.K+sumK)^2))/(myArbitrator.K+sumK+1).*(myArbitrator.K+sumK_excl-1);   
-%     myArbitrator.m1_inv_Fano=myArbitrator.m1_mean./myArbitrator.m1_var;
+    myArbitrator.m1_var=((1+myArbitrator.m1_PE_num)/((myArbitrator.K+sumK)^2))/(myArbitrator.K+sumK+1).*(myArbitrator.K+sumK_excl-1);
+    % Here, reliabilty is instead replaced with uncertainty
     myArbitrator.m1_inv_Fano=myArbitrator.m1_var./myArbitrator.m1_mean;
     
     % MF model (m2)
@@ -64,7 +64,7 @@ function [myArbitrator myState1 myState2]=Bayesian_Arb(myArbitrator, myState1, m
         myArbitrator.m2_inv_Fano=myArbitrator.m2_var./myArbitrator.m2_mean;
     elseif modelOpt == 2  % mixedArb
         myArbitrator.m2_absPEestimate=myArbitrator.m2_absPEestimate+myArbitrator.m2_absPEestimate_lr*(abs(myState2.RPE_history(myState2.index))-myArbitrator.m2_absPEestimate);
-%         myArbitrator.m2_inv_Fano=[0; (40-myArbitrator.m2_absPEestimate/40); 0];
+        % Here, reliabilty is instead replaced with uncertainty
         myArbitrator.m2_inv_Fano=[0; myArbitrator.m2_absPEestimate/40; 0];
         myArbitrator.m2_mean=myArbitrator.m2_inv_Fano; myArbitrator.m2_var=[0.1; (myArbitrator.m2_absPEestimate*0.01); 0.1];
     end
@@ -75,8 +75,9 @@ function [myArbitrator myState1 myState2]=Bayesian_Arb(myArbitrator, myState1, m
     
     input0=myArbitrator.m1_inv_Fano;
     input1= myArbitrator.m1_wgt'*myArbitrator.m1_inv_Fano;
-    myArbitrator.transition_rate12=myArbitrator.A_12/(1+exp(myArbitrator.B_12*input1/sum(input0)));
-
+    chi_mb = input1/sum(input0);
+    % Use 1-chi_mb, which is the reliability (1-uncertainty)
+    myArbitrator.transition_rate12=myArbitrator.A_12/(1+exp(myArbitrator.B_12*(1-chi_mb)));
     if modelOpt == 1
         input0=myArbitrator.m2_inv_Fano;
         input2=myArbitrator.m2_wgt'*myArbitrator.m2_inv_Fano;
@@ -84,12 +85,14 @@ function [myArbitrator myState1 myState2]=Bayesian_Arb(myArbitrator, myState1, m
         input0=1;
         input2=myArbitrator.m2_wgt'*myArbitrator.m2_inv_Fano;
     end
-    myArbitrator.transition_rate21=myArbitrator.A_21/(1+exp(myArbitrator.B_21*input2/sum(input0)));
+    chi_mf = input2/sum(input0);
+    % Use 1-chi_mf, which is the reliability (1-uncertainty)
+    myArbitrator.transition_rate21=myArbitrator.A_21/(1+exp(myArbitrator.B_21*(1-chi_mf)));
     myArbitrator.transition_rate12_prev=myArbitrator.transition_rate12;
     myArbitrator.transition_rate21_prev=myArbitrator.transition_rate21;
-    
+
     myArbitrator.Tau=1/(myArbitrator.transition_rate12+myArbitrator.transition_rate21); % alpha + beta term.
-    myArbitrator.m1_prob_inf=myArbitrator.transition_rate21*myArbitrator.Tau;
+    myArbitrator.m1_prob_inf=myArbitrator.transition_rate21*myArbitrator.Tau; % transition_rate21 = alpha
     myArbitrator.m1_prob=myArbitrator.m1_prob_inf+(myArbitrator.m1_prob_prev-myArbitrator.m1_prob_inf)*exp((-1)*myArbitrator.Time_Step/myArbitrator.Tau);
     
     switch myArbitrator.opt_ArbModel
