@@ -277,8 +277,9 @@ for ll=1:1:tot_num_sbj
                         myArbitrator_top.backward_flag=0;
                     end
                 end
+
                 if(mode_data_prev~=mode_data)
-                    myArbitrator_top.ind_active_model=1;  % switching the mode
+                    myArbitrator_top.ind_active_model=1;  % switching the mode (== forward update)
                     myArbitrator_top.m1_prob_prev=0.8;    % changing the choice prob accordingly
                     myArbitrator_top.m1_prob=myArbitrator_top.m1_prob_prev;
                     if((mode_data_prev~=-1)&&(mode_data==-1))  % goal mode -> habitual mode
@@ -321,6 +322,8 @@ for ll=1:1:tot_num_sbj
                     map.reward(mode_data_mat)=map.reward_save(mode_data_mat);
                     
                     % (2) backward update of the fwd model
+                    % TODO: backward update conducted two times for each
+                    % round?
                     if((mode.USE_BWDupdate_of_FWDmodel==1) && (myArbitrator_top.backward_flag==1))
                         state_fwd=Model_RL2(state_fwd, param_fwd, map, 'bwd_update');
                     end
@@ -415,10 +418,8 @@ for ll=1:1:tot_num_sbj
     end        
 end
 
-
 %% fitness value
 Sum_NegLogLik_val(pop_id)=Sum_NegLogLik;
-
 
 %% returns
 if(mode.out==1)
@@ -429,11 +430,3 @@ if(mode.out==2)
 end
 
 end
-
-
-
-
-
-
-
-
