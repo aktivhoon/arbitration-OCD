@@ -146,6 +146,9 @@ for ll=1:1:tot_num_sbj
                     % state transition
                     [state_fwd map0]=StateSpace_v1(state_fwd,map0,opt_state_space);  % map&state index ++
                     % 1. fwd model update
+                    if state_fwd.SARSA(1) == 1
+                        state_fwd.SARSA(3) = 0;
+                    end
                     state_fwd=Model_RL2(state_fwd, param_fwd0, map0, 'fwd_update');
                 end
             end
@@ -208,6 +211,9 @@ for ll=1:1:tot_num_sbj
                     % 1. sarsa next action selection : (s',a') - if s' is terminal, then no decision
                     state_sarsa=Model_RL2(state_sarsa, param_sarsa0, map0_s, 'decision_hypo');
                     % 1. sarsa model upate
+                    if state_sarsa.SARSA(1) == 1
+                        state_sarsa.SARSA(3) = 0;
+                    end
                     state_sarsa=Model_RL2(state_sarsa, param_sarsa0, map0_s, 'sarsa_update');
                 end
             end
@@ -350,6 +356,9 @@ for ll=1:1:tot_num_sbj
                         [state_fwd map]=StateSpace_v1(state_fwd,map,opt_state_space); % map&state index ++
                         state_sarsa.index=state_fwd.index;
                         % 1. fwd model update
+                        if state_fwd.SARSA(1) == 1
+                            state_fwd.SARSA(3) = 0;
+                        end
                         state_fwd=Model_RL2(state_fwd, param_fwd, map, 'fwd_update');
                         % 2. state synchronization
                         state_sarsa.state_history(state_fwd.index)=state_fwd.state_history(state_fwd.index);
@@ -357,6 +366,9 @@ for ll=1:1:tot_num_sbj
                         % 3. sarsa next action selection : (s',a') - if s' is terminal, then no decision
                         state_sarsa=Model_RL2(state_sarsa, param_sarsa, map, 'decision_hypo');
                         % 3. sarsa model upate
+                        if state_sarsa.SARSA(1) == 1
+                            state_sarsa.SARSA(3) = 0;
+                        end
                         state_sarsa=Model_RL2(state_sarsa, param_sarsa, map, 'sarsa_update');
                         % history synchronization
                         myArbitrator_top.state_history=state_fwd.state_history;
@@ -377,10 +389,16 @@ for ll=1:1:tot_num_sbj
                         % 1. sarsa next action selection : (s',a') - if s' is terminal, then no decision
                         state_sarsa=Model_RL2(state_sarsa, param_sarsa, map, 'decision_hypo');
                         % 1. sarsa model upate
+                        if state_sarsa.SARSA(1) == 1
+                            state_sarsa.SARSA(3) = 0;
+                        end
                         state_sarsa=Model_RL2(state_sarsa, param_sarsa, map, 'sarsa_update');
                         % 2. state synchronization
                         state_fwd.state_history(state_sarsa.index)=state_sarsa.state_history(state_sarsa.index);
                         state_fwd.SARSA=state_sarsa.SARSA;
+                        if state_fwd.SARSA(1) == 1
+                            state_fwd.SARSA(3) = 0;
+                        end
                         % 3. fwd model update
                         state_fwd=Model_RL2(state_fwd, param_fwd, map, 'fwd_update');
                         % history synchronization
