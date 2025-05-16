@@ -55,3 +55,49 @@ learning information (**SPE_history**, **T**, etc.).
 
 ### StateClear
 - Clear environment and action data after a trial (S1->S2->S3).
+
+
+
+
+
+## 🔧 Bug Fixes & Important Code Corrections
+
+> These fixes were made to ensure the correctness and stability of the arbitration and RL computations.
+
+### 1. 🐞 SPE Index Misalignment
+- **File**: `Bayesian_Arb.m`
+- **Line**: ~30  
+- **Issue**: The first index of `SPE_history` should be neglected (always 0), so `index + 1` must be used.  
+- **Fix**: Replaced `SPE_history(index)` with `SPE_history(index + 1)` to skip the initial dummy value and correctly align subsequent SPEs.
+
+---
+
+### 2. 🐞 Incorrect Use of Reliability Instead of Uncertainty
+- **File**: `Bayesian_Arb.m`
+- **Lines**: ~45–60  
+- **Issue**: Original code computed arbitration weights using **reliability** (e.g., `1 - omega/RPE_max`).  
+- **Fix**: Switched to using **uncertainty** directly and adjusted transition weighting as `1 - uncertainty`.
+
+---
+
+### 3. 🐞 Overestimated Q-values Due to Reward Duplication
+- **File**: `simul_Arb.m`
+- **Lines**: Reward assignment logic near trial iteration  
+- **Issue**: Reward from the final state of one episode was carried into the initial state of the next, especially when `state == S1`.  
+- **Effect**: Q-values exceeded maximum expected reward (e.g., 48, 50 > max 40).  
+- **Fix**: Added a condition to nullify the reward at the initial state of a new episode.
+
+---
+
+### 4. 🐞 Double Backward Update in 2-Step Task
+- **File**: `simul_Arb.m`
+- **Lines**: Backward update block in loop over steps  
+- **Issue**: Backward update was applied twice (step 1 and step 2).  
+- **Fix**: Applied backward update **only once** per trial when reward context changes.
+
+---
+
+### 5. 🐞 Arbitrary Transition Threshold for Habitual Shift
+- **File**: `batch_pcs.m`
+- **Line**: Parameter setup (~line 15–20)  
+- **Note**: For proper MB→MF arbitration dynamics, threshold was set to `0.1` instead of default. This setting enhances the likelihood of observing habitual patterns during fitting.
